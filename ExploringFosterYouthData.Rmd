@@ -1,0 +1,202 @@
+---
+title: "Analysis of Foster Youth Data"
+output: html_notebook
+---
+
+# Prepare Data
+
+## Load Libraries
+
+We first need to load the necessary libraries. You may need to uncomment some lines at the top to install the packages first. To execute this chunk, click the *Run* button within the chunk or by place your cursor inside it and press *Cmd+Shift+Enter*. 
+
+```{r load-libraries}
+# Uncomment to install libraries if not already installed
+# install.packages("foreign")
+# install.packages("dplyr")
+# install.packages("ggplot2")
+# install.packages("tidyr")
+# install.packages("forcats")
+
+# Load libraries
+library(foreign)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(forcats)
+```
+## Read Data
+
+Now let's load the foster youth data from the SPSS file. Either move your sensitive data to the `RawData/SensitiveData` folder, or change the `filePath` variable listed below to match the location of your data. This may take a few minutes. 
+
+```{r read-data}
+filePath <- "RawData/SensitiveData/"
+rawFosterData <- read.spss(paste0(filePath, "DS274 FC2021v1/Data/SPSS Files/FC2021v1.sav"), to.data.frame = TRUE)
+```
+## Explore Data
+
+Before we make any modifications, let's take a quick look at the structure and summary of the foster data.
+
+```{r view-data}
+# View the first few rows of the data
+head(rawFosterData)
+```
+## Filter and Transform Data
+
+Now, we'll filter the data to include only individuals who were in foster care at the end of the administrative year. We'll also simplify the race categories and select only the relevant columns.
+
+```{r transform-data}
+# Filter, mutate, and select
+fosterData <- rawFosterData %>% 
+  filter(InAtEnd == "Yes") %>%
+  mutate(
+    race = fct_recode(RaceEthn,
+      Hispanic = "Hispanic (Any Race)",
+      white = "Non-Hispanic (NH), White",
+      Black = "NH, Black",
+      Indigenous = "NH, Am Ind AK Native",
+      Asian = "NH, Asian",
+      Pacific = "NH, Hawaiian / Other Pac Islander",
+      Multi = "NH, More than One Race",
+      Other = "Race/Ethnicity Unknown"
+    )
+  ) %>%
+  select(St, Sex, race, AgeAtEnd) %>%
+  rename(state = St, sex = Sex, age = AgeAtEnd)
+
+# View the first few rows of the transformed data
+head(fosterData)
+```
+# Explore Transformed Data
+
+Now that we have transformed the data, let's take a look at the summary statistics and structure of the transformed data.
+
+```{r summary-data}
+# Summary statistics for all variables in the transformed data
+summary(fosterData)
+```
+
+```{r structure-data}
+# Structure of the transformed data
+str(fosterData)
+```
+
+## Distribution of Sex
+
+Let's examine the distribution of the `sex` variable in the dataset.
+
+```{r sex-distribution}
+table(fosterData$sex)
+```
+
+## Distribution of Race
+
+Next, we'll look at the distribution of the `race` variable.
+
+```{r race-distribution-table}
+table(fosterData$race)
+```
+
+```{r race-distribution-plot}
+ggplot(fosterData, aes(x = race)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Distribution of Race", x = "Race", y = "Frequency")
+```
+
+# Question 1: How many 16-year-olds were in foster care at the end of the administrative year?
+
+In this section, you'll write code to determine how many 16-year-olds were in foster care at the end of the administrative year. Use the `fosterData` dataframe that we created earlier and any other resources you want to get an answer. 
+
+```{r count-16-year-olds}
+# Write your code here.
+
+```
+
+## Optional Exercise: State Distribution
+
+**This exercise is optional and should be completed only if time permits.**
+
+Create a bar plot showing the distribution of the number of children in foster care across different states. What do you observe about the distribution? Are there any states with particularly high or low numbers of children in foster care?
+
+```{r state-distribution-plot}
+# Write your code here to create a bar plot of the state distribution
+
+```
+
+
+# Question 2: Are summary statistics consistent with public reports?
+
+In this exercise, you will compare summary statistics from the individual-level dataset we've been working with to the aggregate data available publicly. 
+
+**Instructions:**
+1. Choose a state from the individual-level dataset (`fosterData`).
+2. Calculate one of the following summary statistics for your chosen state:
+   - Total number of children in foster care.
+   - Total number of male and female children in foster care.
+   - Total number of children in foster care, broken down by race.
+   - Total number of children in foster care, broken down by age.
+3. Visit the [Children's Bureau website](https://www.acf.hhs.gov/cb/research-data-technology/statistics-research/afcars) and find the corresponding aggregate data for the same state and summary statistic.
+4. Compare the summary statistic you calculated from the individual-level data to the aggregate data from the website. Are they the same? If not, discuss possible reasons for any discrepancies.
+
+**Potentially helpful functions:** You can use the `filter()` function to select data for your chosen state and then use functions like `sum()`, `n()`, `group_by()`, and `summarize()` to calculate the summary statistics.
+
+```{r state-summary-statistic}
+# Write your code here to calculate a summary statistic for your chosen state
+
+```
+
+# Question #3: Which states provide foster care support past the 18th birthday?
+
+In this section, we'll investigate which states provide foster care support past the age of 18. We'll start by examining the distribution of ages in foster care for each state.
+
+## Initial Exploration
+
+First, let's look at the distribution of ages in foster care across all states.
+
+```{r age-distribution-all-states}
+ggplot(fosterData, aes(x = as.numeric(as.character(age)))) +
+  geom_bar(na.rm = TRUE) +
+  theme_minimal() +
+  labs(title = "Age Distribution in Foster Care (All States)", x = "Age", y = "Frequency")
+```
+
+## Question #3.1: State-Specific Age Distribution
+
+Choose a state and create a histogram showing the age distribution of children in foster care for that state. What do you observe about the distribution, especially for ages 18 and above?
+
+**Hint:** You may want to use the `trimws()` function to trim white space from the `state` column. 
+
+```{r state-specific-age-distribution}
+# Write your code here to create a histogram for a specific state
+
+```
+
+## Identifying States with Extended Foster Care
+
+To identify states with extended foster care support, we can look at the proportion of individuals in foster care who are 18 years or older.
+
+## Question #3.2: Proportion of 18+ in Foster Care
+
+Calculate the proportion of individuals in foster care who are 18 years or older for each state. Which states have the highest proportions?
+
+```{r proportion-18-plus}
+# Write your code here to calculate the proportion of 18+ individuals in foster care for each state
+age_18_plus <- fosterData %>%
+  mutate(numeric_age = as.numeric(as.character(age))) %>%  # Convert age to numeric
+  filter(!is.na(numeric_age) & numeric_age <= 20) %>%  # Remove NAs and outliers
+  group_by(  ) %>%  # Fill in this line
+  summarize(proportion_18_plus =   )  # And this line too
+
+age_18_plus[order(-age_18_plus$proportion_18_plus), ]
+```
+
+## Question #3.3: Visualizing Extended Support
+
+Create a bar plot showing the proportion of individuals in foster care who are 18 years or older for each state. What does this tell you about the availability of extended foster care support?
+
+```{r visualize-extended-support}
+# Write your code here to create a bar plot of the proportion of 18+ individuals in foster care for each state
+
+```
+
+Congratulations on completing the workshop!
