@@ -82,7 +82,8 @@ $RECYCLE.BIN/
 .eclipse/
 
 # Ignore sensitive data
-**/SensitiveData/*
+RawData/SensitiveData/*
+!RawData/SensitiveData/.gitkeep
 **/DS274*/
 **/DS*/
 FC2021v1.sav
